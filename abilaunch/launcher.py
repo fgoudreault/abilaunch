@@ -77,12 +77,28 @@ class Launcher(AbiLauncher):
         if isinstance(pseudos, str):
             pseudos = (pseudos, )
         for pseudo in pseudos:
-            pseudo = os.path.expanduser(pseudo)
+            pseudo = self._check_pseudo_exists(pseudo)
             pseudos_list.append(os.path.basename(pseudo))
             pseudo_dir.add(os.path.dirname(pseudo))
         if len(pseudo_dir) > 1:
             raise ValueError("Pseudos must all come from the same directory.")
         return pseudo_dir.pop(), pseudos_list
+
+    def _check_pseudo_exists(self, pseudo):
+        # check is a pseudo exists if not, try to locate it under
+        # the default pseudo dir
+        # once it is found, return the full path to it
+        error = FileNotFoundError("Could not locate pseudo %s" % pseudo)
+        pseudo = os.path.expanduser(pseudo)  # get rid of "~"
+        if os.path.exists(pseudo):
+            return os.path.abspath(pseudo)
+        if USER_CONFIG.default_pseudos_dir is "none":  # pragma: nocover
+            raise error
+        indefault = os.path.join(USER_CONFIG.default_pseudos_dir, pseudo)
+        if os.path.exists(indefault):  # pragma: nocover
+            return os.path.abspath(indefault)
+        # if we are here, raise same error
+        raise error
 
     @classmethod
     def from_files(cls, input_file_path, *args, **kwargs):

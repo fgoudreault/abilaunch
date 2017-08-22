@@ -10,3 +10,5 @@ class ConfigFileParser:
         self._config = configparser.ConfigParser()
         self._config.read(CONFIG_PATH)
         self.abinit_path = self._config["DEFAULT"]["abinit_path"]
+        dpd = "default_pseudos_dir"
+        self.default_pseudos_dir = self._config["DEFAULT"][dpd]

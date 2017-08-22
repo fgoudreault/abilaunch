@@ -24,5 +24,6 @@ dist
 # test files
 # ##########
 .coverage
+htmlcov/
 cover/
 cache/

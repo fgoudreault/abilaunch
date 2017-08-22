@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+import shutil
 from abilaunch import Launcher
 
 
@@ -70,9 +71,20 @@ class TestLauncher(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.launcher = Launcher(self.tempdir.name, Hpseudo, run=True)
 
-    def test_raise_pseudos_multiple_places(self):
-        with self.assertRaises(ValueError):
+    def test_raise_pseudos_not_exists(self):
+        with self.assertRaises(FileNotFoundError):
             # create new non existant pseudo
             Hpseudo2 = os.path.expanduser("~/pseudo")
+            self.launcher = Launcher(self.tempdir.name, Hpseudo2,
+                                     abinit_variables=tbase1_1_vars)
+
+    def test_raise_multiple_pseudo_dir(self):
+        # temporary copy pseudo in another place
+        tempdir2 = tempfile.TemporaryDirectory()
+        shutil.copy(Hpseudo, tempdir2.name)
+        Hpseudo2 = os.path.join(tempdir2.name, os.path.basename(Hpseudo))
+        with self.assertRaises(ValueError):
             self.launcher = Launcher(self.tempdir.name, [Hpseudo, Hpseudo2],
                                      abinit_variables=tbase1_1_vars)
+        tempdir2.cleanup()
+        del tempdir2

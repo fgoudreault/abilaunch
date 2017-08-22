@@ -38,7 +38,8 @@ if not os.path.isdir(dirname):
 if not os.path.isfile(CONFIG_PATH):
     config = configparser.ConfigParser()
     # assume it is in the PATH variable
-    config["DEFAULT"] = {"abinit_path": "abinit"}
+    config["DEFAULT"] = {"abinit_path": "abinit",
+                         "default_pseudos_dir": "none"}
     # write file
     with open(CONFIG_PATH, "w") as f:
         config.write(f)
