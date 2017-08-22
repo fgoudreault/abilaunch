@@ -86,7 +86,7 @@ class Launcher(AbiLauncher):
         return pseudo_dir.pop(), pseudos_list
 
     @classmethod
-    def from_files(workdir, input_file_path, files_file_path, **kwargs):
+    def from_files(cls, workdir, input_file_path, files_file_path, **kwargs):
         files = FilesReader(files_file_path)
         inputs = AbinitInputFile(input_file_path)
         return Launcher(workdir, files["pseudos"],

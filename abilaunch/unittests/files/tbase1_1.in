@@ -1,0 +1,15 @@
+acell 10 10 10
+typat 1 1
+optforces 1
+nstep 10
+kptopt 0
+ntypat 1
+xcart -0.7  0.0  0.0
+       0.7  0.0  0.0
+natom 2
+znucl 1
+diemac 2.0
+toldfe 1e-06
+ecut 10
+prtvol 2
+nkpt 1
