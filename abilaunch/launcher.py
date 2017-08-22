@@ -25,13 +25,16 @@ class Launcher(AbiLauncher):
                   The list of path to the pseudos. If only one pseudo, this do
                   not need to be a list.
         run : bool, optional
-              If True, the Launcher will launch the calculation on instantiation.
+              If True, the Launcher will launch the
+              calculation on instantiation.
         input_name : str, optional
                      Base name for the files.
         overwrite : bool, optional
-                    If True, if input files already exists they will be overwritten.
+                    If True, if input files already exists
+                    they will be overwritten.
         abinit_variables : dict
-                           A dictionary containing all abinit variables used in the input file.
+                           A dictionary containing all abinit variables
+                           used in the input file.
                            Each key represents the name of a variable.
         """
         if abinit_variables is None:
@@ -51,18 +54,18 @@ class Launcher(AbiLauncher):
         if abinit_path is None:
             abinit_path = USER_CONFIG.abinit_path
         self.set_executable(abinit_path)
-        
+
         # set pseudos
         pseudo_dir, pseudos = self._check_pseudos(pseudos)
         self.set_pseudodir(pseudo_dir)
         self.set_pseudos(pseudos)
-        
+
         # set stderr to same directory of input file
         self.jobfile.set_stderr(os.path.join(workdir, "stderr"))
         # set input variables
         for varname, varvalue in abinit_variables.items():
             setattr(self, varname, varvalue)
-        
+
         # write files
         self.make(verbose=1, force=overwrite)
         # run calculation

@@ -12,7 +12,7 @@ class FilesReader:
     def _get_lines(self, path):
         with open(path, "r") as f:
             lines = f.readlines()
-        lines = [l.strip() if line != "\n" or line == "" for l in lines]
+        lines = [l.strip() for l in lines if l != "\n" or l == ""]
         return lines
 
     def __getitem__(self, item):
