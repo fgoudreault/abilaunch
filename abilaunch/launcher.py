@@ -2,6 +2,8 @@ from abipy.htc.launcher import Launcher as AbiLauncher
 from abipy.abio.abivars import AbinitInputFile
 from .config import ConfigFileParser
 import os
+import shutil
+import tempfile
 
 
 USER_CONFIG = ConfigFileParser()
@@ -13,7 +15,7 @@ class Launcher(AbiLauncher):
     def __init__(self, workdir, pseudos, run=False,
                  input_name=None,
                  overwrite=False, abinit_variables=None,
-                 abinit_path=None):
+                 abinit_path=None, to_link=None):
         """Launcher class init method.
 
         Parameters
@@ -35,6 +37,8 @@ class Launcher(AbiLauncher):
                            A dictionary containing all abinit variables
                            used in the input file.
                            Each key represents the name of a variable.
+        to_link : list, str
+                  A list of input files to link.
         """
         if abinit_variables is None:
             raise ValueError("No abinit variables given...")
@@ -65,11 +69,25 @@ class Launcher(AbiLauncher):
         for varname, varvalue in abinit_variables.items():
             setattr(self, varname, varvalue)
 
+        # link input files
+        self._process_to_link(to_link)
         # write files
         self.make(verbose=1, force=overwrite)
         # run calculation
         if run:
             self.run()
+
+    def _process_to_link(self, to_link):
+        if to_link is None:
+            return
+        if isinstance(to_link, str):
+            to_link = (to_link, )
+        for filename in to_link:
+            path = os.path.abspath(os.path.expanduser(filename))
+            if not os.path.exists(path):
+                raise FileNotFoundError("File to link not found: %s" %
+                                        filename)
+            self.link_idat(path)
 
     def _check_pseudos(self, pseudos):
         pseudo_dir = set()
@@ -110,3 +128,24 @@ class Launcher(AbiLauncher):
                         abinit_variables=inputs.datasets[0],
                         input_name=input_name,
                         **kwargs)
+
+    @classmethod
+    def from_inplace_input(cls, inputfilename, *args, **kwargs):
+        # use inplace inputfile
+        # to make it work with abipy, we need to erase it temporarily such that
+        # abipy is able to create the rest of files
+        tempdir = tempfile.TemporaryDirectory()
+        shutil.copy(inputfilename, tempdir.name)
+        os.remove(inputfilename)
+        newpath = os.path.join(tempdir.name, inputfilename)
+        run = kwargs.pop("run", False)
+        l = Launcher.from_files(newpath, *args, run=False, **kwargs)
+        # once all is created, restore input file
+        shutil.copy(newpath, ".")
+        # cleanup temporary dir
+        tempdir.cleanup()
+        del tempdir
+        # run abinit if specified
+        if run:
+            l.run()
+        return l
