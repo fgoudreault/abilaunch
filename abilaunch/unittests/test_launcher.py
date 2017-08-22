@@ -56,10 +56,10 @@ class TestLauncher(unittest.TestCase):
 
     def test_launcher_from_file(self):
         inputpath = os.path.join(here, "files", "tbase1_1.in")
-        filespath = os.path.join(here, "files", "tbase1_1.files")
-        self.launcher = Launcher.from_files(self.tempdir.name,
-                                            inputpath,
-                                            filespath, run=True)
+        self.launcher = Launcher.from_files(inputpath,
+                                            self.tempdir.name,
+                                            Hpseudo,
+                                            run=True)
         # check that input file is created in good dir
         inputfile = os.path.join(self.tempdir.name, "tbase1_1.in")
         outputfile = os.path.join(self.tempdir.name, "tbase1_1.out")

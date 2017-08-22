@@ -1,7 +1,6 @@
 from abipy.htc.launcher import Launcher as AbiLauncher
 from abipy.abio.abivars import AbinitInputFile
 from .config import ConfigFileParser
-from .files_reader import FilesReader
 import os
 
 
@@ -86,9 +85,12 @@ class Launcher(AbiLauncher):
         return pseudo_dir.pop(), pseudos_list
 
     @classmethod
-    def from_files(cls, workdir, input_file_path, files_file_path, **kwargs):
-        files = FilesReader(files_file_path)
+    def from_files(cls, input_file_path, *args, **kwargs):
         inputs = AbinitInputFile(input_file_path)
-        return Launcher(workdir, files["pseudos"],
-                        input_name=files[".in"],
-                        abinit_variables=inputs.datasets[0], **kwargs)
+        input_name = kwargs.pop("input_name", None)
+        if input_name is None:
+            input_name = os.path.basename(input_file_path)
+        return Launcher(*args,
+                        abinit_variables=inputs.datasets[0],
+                        input_name=input_name,
+                        **kwargs)
