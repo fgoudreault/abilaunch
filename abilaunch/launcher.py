@@ -118,6 +118,11 @@ class Launcher(AbiLauncher):
         # if we are here, raise same error
         raise error
 
+    def run(self):
+        print("Launching abinit for %s" % os.path.relpath(self.files_name))
+        super().run()
+        print("Computation finished.")
+
     @classmethod
     def from_files(cls, input_file_path, *args, **kwargs):
         inputs = AbinitInputFile(input_file_path)
