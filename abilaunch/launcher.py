@@ -144,7 +144,7 @@ class Launcher(AbiLauncher):
         # delete input file created by abipy
         os.remove(inputfilename)
         # once all is created, restore input file
-        shutil.copy2(newpath, ".")
+        shutil.copy2(newpath, os.path.abspath(inputfilename))
         # cleanup temporary dir
         tempdir.cleanup()
         del tempdir
