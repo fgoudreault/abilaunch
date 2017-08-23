@@ -88,3 +88,34 @@ class TestLauncher(unittest.TestCase):
                                      abinit_variables=tbase1_1_vars)
         tempdir2.cleanup()
         del tempdir2
+
+    def test_linking(self):
+        # create file to link
+        tempdir2 = tempfile.TemporaryDirectory()
+        path = os.path.join(tempdir2.name, "odat_WFK")
+        with open(path, "a") as f:
+            f.write("test")
+        self.launcher = Launcher(self.tempdir.name, Hpseudo,
+                                 input_name="test.in",
+                                 abinit_variables=tbase1_1_vars,
+                                 to_link=path)
+        link = os.path.join(self.tempdir.name, "input_data", "idat_test_WFK")
+        self.assertTrue(os.path.islink(link))
+        tempdir2.cleanup()
+        del tempdir2
+
+    def test_link_raise(self):
+        with self.assertRaises(FileNotFoundError):
+            self.launcher = Launcher(self.tempdir.name, Hpseudo,
+                                     input_name="test.in",
+                                     abinit_variables=tbase1_1_vars,
+                                     to_link=os.path.join(self.tempdir.name,
+                                                          "odat_WFK"))
+
+    def test_init_from_inplace_input(self):
+        inputpath = os.path.join(here, "files", "tbase1_1.in")
+        shutil.copy2(inputpath, self.tempdir.name)
+        p = os.path.join(self.tempdir.name, "tbase1_1.in")
+        self.launcher = Launcher.from_inplace_input(p, self.tempdir.name,
+                                                    Hpseudo,
+                                                    run=True)

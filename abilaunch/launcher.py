@@ -135,13 +135,16 @@ class Launcher(AbiLauncher):
         # to make it work with abipy, we need to erase it temporarily such that
         # abipy is able to create the rest of files
         tempdir = tempfile.TemporaryDirectory()
-        shutil.copy(inputfilename, tempdir.name)
+        filename = os.path.basename(inputfilename)
+        shutil.copy2(inputfilename, os.path.join(tempdir.name, filename))
         os.remove(inputfilename)
-        newpath = os.path.join(tempdir.name, inputfilename)
+        newpath = os.path.join(tempdir.name, filename)
         run = kwargs.pop("run", False)
         l = Launcher.from_files(newpath, *args, run=False, **kwargs)
+        # delete input file created by abipy
+        os.remove(inputfilename)
         # once all is created, restore input file
-        shutil.copy(newpath, ".")
+        shutil.copy2(newpath, ".")
         # cleanup temporary dir
         tempdir.cleanup()
         del tempdir
