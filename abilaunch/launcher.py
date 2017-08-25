@@ -149,15 +149,22 @@ class Launcher(AbiLauncher):
         os.remove(inputfilename)
         newpath = os.path.join(tempdir.name, filename)
         run = kwargs.pop("run", False)
-        l = Launcher.from_files(newpath, *args, run=False, **kwargs)
-        # delete input file created by abipy
-        os.remove(inputfilename)
-        # once all is created, restore input file
-        shutil.copy2(newpath, os.path.abspath(inputfilename))
-        # cleanup temporary dir
-        tempdir.cleanup()
-        del tempdir
-        # run abinit if specified
-        if run:
-            l.run()
-        return l
+        try:
+            success = True
+            l = Launcher.from_files(newpath, *args, run=False, **kwargs)
+        except:  # pragma: nocover
+            success = False
+        else:
+            # delete input file created by abipy
+            os.remove(inputfilename)
+        finally:
+            # once all is created, restore input file
+            shutil.copy2(newpath, os.path.abspath(inputfilename))
+            # cleanup temporary dir
+            tempdir.cleanup()
+            del tempdir
+            if success:
+                if run:
+                    # run abinit if specified
+                    l.run()
+                return l
