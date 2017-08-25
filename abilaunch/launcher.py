@@ -64,7 +64,11 @@ class Launcher(AbiLauncher):
         self.set_pseudos(pseudos)
 
         # set stderr to same directory of input file
-        self.jobfile.set_stderr(os.path.join(workdir, "stderr"))
+        stderrname = os.path.basename(self.jobfile.stderr)
+        self.jobfile.set_stderr(os.path.join(workdir, stderrname))
+        # samething for logfile
+        logname = os.path.basename(self.jobfile.log)
+        self.jobfile.set_log(os.path.join(workdir, logname))
         # set input variables
         for varname, varvalue in abinit_variables.items():
             setattr(self, varname, varvalue)
