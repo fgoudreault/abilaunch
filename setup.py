@@ -1,10 +1,10 @@
 from setuptools import setup
-from abilaunch.config import CONFIG_PATH
 import configparser
 import pip
 import os
 
 
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config", "abilaunch")
 install_requires = ["abipy", ]
 
 # check if abipy is installed
