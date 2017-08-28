@@ -15,7 +15,9 @@ class Launcher(AbiLauncher):
     def __init__(self, workdir, pseudos, run=False,
                  input_name=None,
                  overwrite=False, abinit_variables=None,
-                 abinit_path=None, to_link=None):
+                 abinit_path=None, to_link=None, jobname=None,
+                 nodes=None, ppn=None, memory=None, runtime=None,
+                 mpi_script=None):
         """Launcher class init method.
 
         Parameters
@@ -75,6 +77,21 @@ class Launcher(AbiLauncher):
 
         # link input files
         self._process_to_link(to_link)
+
+        # Add MPI lines to jobfile if needed
+        if jobname is not None:
+            self.set_jobname(jobname)
+        if nodes is not None:
+            self.set_nodes(nodes)
+        if ppn is not None:
+            self.set_ppn(ppn)
+        if memory is not None:
+            self.set_memory(memory)
+        if runtime is not None:
+            self.set_runtime(runtime)
+        if mpi_script is not None:
+            self.set_mpirun(mpi_script)
+
         # write files
         self.make(verbose=1, force=overwrite)
         # run calculation
