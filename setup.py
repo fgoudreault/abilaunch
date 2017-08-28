@@ -5,7 +5,7 @@ import os
 
 
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config", "abilaunch")
-install_requires = ["abipy", ]
+install_requires = ["abipy", "pytest-cov"]
 
 # check if abipy is installed
 try:
