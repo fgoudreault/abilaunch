@@ -5,6 +5,8 @@ from timeit import default_timer as timer
 import os
 import shutil
 import tempfile
+import traceback
+import warnings
 
 
 USER_CONFIG = ConfigFileParser()
@@ -172,8 +174,11 @@ class Launcher(AbiLauncher):
         try:
             success = True
             l = Launcher.from_files(newpath, *args, run=False, **kwargs)
-        except:  # pragma: nocover
+        except Exception as e:  # pragma: nocover
             success = False
+            warnings.warn("An error occured. Full Traceback:")
+            tb = traceback.format_exc()
+            print(tb)
         else:
             # delete input file created by abipy
             os.remove(inputfilename)
