@@ -94,9 +94,12 @@ class Launcher(AbiLauncher):
 
     def run(self, submit=None):
         if (USER_CONFIG.qsub and submit is None) or submit:
-            self.submit()
+            self.submit(verbose=1)
         else:
-            super().run()
+            start = timer()
+            super().run(verbose=1)
+            end = timer()
+            print("Computation finished in %ss." % str(end - start))
 
     def _process_jobfile(self, **kwargs):
         # Add MPI lines to jobfile if needed
@@ -161,13 +164,6 @@ class Launcher(AbiLauncher):
             return os.path.abspath(indefault)
         # if we are here, raise same error
         raise error
-
-    def run(self):
-        print("Launching abinit for %s" % os.path.relpath(self.files_name))
-        start = timer()
-        super().run()
-        end = timer()
-        print("Computation finished in %ss." % str(end - start))
 
     @classmethod
     def from_files(cls, input_file_path, *args, **kwargs):
