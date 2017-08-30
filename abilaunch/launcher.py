@@ -20,7 +20,7 @@ class Launcher(AbiLauncher):
                  overwrite=False, abinit_variables=None,
                  abinit_path=None, to_link=None, jobname=None,
                  nodes=None, ppn=None, memory=None, runtime=None,
-                 mpi_script=None, **kwargs):
+                 mpi_script=None, modules=None, submission_command="qsub"):
         """Launcher class init method.
 
         Parameters
@@ -94,6 +94,10 @@ class Launcher(AbiLauncher):
             self.set_runtime(runtime)
         if mpi_script is not None:
             self.set_mpirun(mpi_script)
+        if modules is not None:
+            self.jobfile.modules = modules
+        if lines_before is not None:
+            self.jobfile.lines_before = lines_before
 
         # write files
         self.make(verbose=1, force=overwrite)
