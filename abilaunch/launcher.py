@@ -17,10 +17,11 @@ class Launcher(AbiLauncher):
     """
     def __init__(self, workdir, pseudos, run=False,
                  input_name=None,
-                 overwrite=False, abinit_variables=None,
-                 abinit_path=None, to_link=None, jobname=None,
-                 nodes=None, ppn=None, memory=None, runtime=None,
-                 mpi_script=None, modules=None, submission_command="qsub"):
+                 overwrite=False,
+                 abinit_variables=None,
+                 abinit_path=None,
+                 to_link=None,
+                 **kwargs):
         """Launcher class init method.
 
         Parameters
@@ -44,6 +45,7 @@ class Launcher(AbiLauncher):
                            Each key represents the name of a variable.
         to_link : list, str
                   A list of input files to link.
+        kwargs : other attributes given to the jobfile.
         """
         if abinit_variables is None:
             raise ValueError("No abinit variables given...")
@@ -56,7 +58,7 @@ class Launcher(AbiLauncher):
             # input file name is the same as working directory
             input_name = os.path.basename(workdir)
         calcname = os.path.join(workdir, input_name)
-        super().__init__(calcname, **kwargs)
+        super().__init__(calcname)
 
         # set executable if custom one is used
         if abinit_path is None:
@@ -81,29 +83,37 @@ class Launcher(AbiLauncher):
         # link input files
         self._process_to_link(to_link)
 
-        # Add MPI lines to jobfile if needed
-        if jobname is not None:
-            self.set_jobname(jobname)
-        if nodes is not None:
-            self.set_nodes(nodes)
-        if ppn is not None:
-            self.set_ppn(ppn)
-        if memory is not None:
-            self.set_memory(memory)
-        if runtime is not None:
-            self.set_runtime(runtime)
-        if mpi_script is not None:
-            self.set_mpirun(mpi_script)
-        if modules is not None:
-            self.jobfile.modules = modules
-        if lines_before is not None:
-            self.jobfile.lines_before = lines_before
-
+        kwargs = self._process_jobfile(**kwargs)
+        if kwargs:
+            raise ValueError("These variables were not used: %s" % str(kwargs))
         # write files
         self.make(verbose=1, force=overwrite)
         # run calculation
         if run:
             self.run()
+
+    def _process_jobfile(self, **kwargs):
+        # Add MPI lines to jobfile if needed
+        # use setter
+        for name, attr in {"jobname": kwargs.pop("jobname", None),
+                           "nodes": kwargs.pop("nodes", None),
+                           "ppn": kwargs.pop("ppn", None),
+                           "runtime": kwargs.pop("runtime", None),
+                           "memory": kwargs.pop("memory", None),
+                           }.items():
+            if attr is not None:
+                func = "self.set_" + name
+                eval(func)(attr)
+        # use attribute setting directly
+        for name, lines in {"lines_before": kwargs.pop("lines_before", None),
+                            "lines_after": kwargs.pop("lines_after", None),
+                            "other_lines": kwargs.pop("other_lines", None),
+                            "modules": kwargs.pop("modules", None),
+                            "mpirun": kwargs.pop("mpirun", None)}.items():
+            if lines is not None:
+                setattr(self.jobfile, name, lines)
+        # return rest of kwargs
+        return kwargs
 
     def _process_to_link(self, to_link):
         if to_link is None:
