@@ -92,6 +92,12 @@ class Launcher(AbiLauncher):
         if run:
             self.run()
 
+    def run(self, submit=None):
+        if (USER_CONFIG.qsub and submit is None) or submit:
+            self.submit()
+        else:
+            super().run()
+
     def _process_jobfile(self, **kwargs):
         # Add MPI lines to jobfile if needed
         # use setter
