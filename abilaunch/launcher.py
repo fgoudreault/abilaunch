@@ -1,6 +1,7 @@
 from abipy.htc.launcher import Launcher as AbiLauncher
 from abipy.abio.abivars import AbinitInputFile
 from .config import ConfigFileParser
+from timeit import default_timer as timer
 import os
 import shutil
 import tempfile
@@ -141,8 +142,10 @@ class Launcher(AbiLauncher):
 
     def run(self):
         print("Launching abinit for %s" % os.path.relpath(self.files_name))
+        start = timer()
         super().run()
-        print("Computation finished.")
+        end = timer()
+        print("Computation finished in %ss." % str(end - start))
 
     @classmethod
     def from_files(cls, input_file_path, *args, **kwargs):
