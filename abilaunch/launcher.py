@@ -20,7 +20,7 @@ class Launcher(AbiLauncher):
                  overwrite=False, abinit_variables=None,
                  abinit_path=None, to_link=None, jobname=None,
                  nodes=None, ppn=None, memory=None, runtime=None,
-                 mpi_script=None):
+                 mpi_script=None, **kwargs):
         """Launcher class init method.
 
         Parameters
@@ -56,7 +56,7 @@ class Launcher(AbiLauncher):
             # input file name is the same as working directory
             input_name = os.path.basename(workdir)
         calcname = os.path.join(workdir, input_name)
-        super().__init__(calcname)
+        super().__init__(calcname, **kwargs)
 
         # set executable if custom one is used
         if abinit_path is None:
