@@ -1,6 +1,7 @@
 from abipy.htc.launcher import Launcher as AbiLauncher
 from abipy.abio.abivars import AbinitInputFile
 from .config import ConfigFileParser
+from .input_approver import InputApprover
 from timeit import default_timer as timer
 import os
 import shutil
@@ -49,6 +50,8 @@ class Launcher(AbiLauncher):
         """
         if abinit_variables is None:
             raise ValueError("No abinit variables given...")
+        self._approve_input(abinit_variables, **kwargs)
+
         workdir = os.path.abspath(os.path.expanduser(workdir))
         # create calculation
         if input_name is not None:
@@ -209,3 +212,32 @@ class Launcher(AbiLauncher):
                     # run abinit if specified
                     l.run()
                 return l
+
+    def _get_mpirun_np(self, **kwargs):
+        mpirun = kwargs.get("mpirun", None)
+        if mpirun is None:
+            return None
+        # mpirun == 'mpirun -np 12'
+        # mpirun == 'mpiexec -npernode 12'
+        split = mpirun.split()
+        try:
+            i = int(split[-1])
+        except ValueError:
+            return None
+        else:
+            return i
+
+    def _approve_input(self, abinit_variables, **kwargs):
+        # check the input variables
+        paral_vars = {"nodes": kwargs.get("nodes", None),
+                      "ppn": kwargs.get("ppn", None),
+                      "mpirun_np": self._get_mpirun_np(**kwargs)}
+        # if all paralvars are None, use None instead
+        useparal = None
+        for k, v in paral_vars.items():
+            if v is not None:
+                useparal = paral_vars
+                break
+        approver = InputApprover(abinit_variables, useparal)
+        if not approver.valid:
+            raise ValueError("Input file errors: %s" % str(approver.errors))
