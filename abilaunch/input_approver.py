@@ -47,7 +47,12 @@ class InputApprover:
             self.errors.append("npernode (%i) call uses more proc than avail."
                                " on the nodes (%i)!" % (mpiuseppn, ppn))
             return False
-
+        if isinstance(nodes, str):
+            if ":" in nodes:
+                # nodes = 3:m48G  for example
+                nodes = int(nodes.split(":")[0])
+            else:
+                nodes = int(nodes)
         total_ncpus = nodes * mpirun_np
         npfft = abinit_variables.get("npfft", 1)
         npband = abinit_variables.get("npband", 1)

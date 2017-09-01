@@ -160,7 +160,7 @@ class Launcher(AbiLauncher):
         pseudo = os.path.expanduser(pseudo)  # get rid of "~"
         if os.path.exists(pseudo):
             return os.path.abspath(pseudo)
-        if USER_CONFIG.default_pseudos_dir is "none":  # pragma: nocover
+        if USER_CONFIG.default_pseudos_dir == "none":  # pragma: nocover
             raise error
         indefault = os.path.join(USER_CONFIG.default_pseudos_dir, pseudo)
         if os.path.exists(indefault):  # pragma: nocover
