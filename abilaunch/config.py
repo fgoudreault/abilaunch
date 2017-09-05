@@ -13,4 +13,10 @@ class ConfigFileParser:
         self.abinit_path = self._config[D]["abinit_path"]
         dpd = "default_pseudos_dir"
         self.default_pseudos_dir = os.path.abspath(self._config[D][dpd])
-        self.qsub = bool(self._config[D]["qsub"])
+        self.qsub = self._get_qsub(self._config)
+
+    def _get_qsub(self, config):
+        string = self._config["DEFAULT"]["qsub"]
+        if string.lower() == "true":
+            return True
+        return False
