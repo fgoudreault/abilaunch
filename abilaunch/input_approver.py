@@ -72,7 +72,7 @@ class InputApprover:
         return True
 
     def _check_basics(self, abivars):
-        mandatory = ("ecut", "ntypat", "znucl", "typat", "acell", "rprim")
+        mandatory = ("ecut", "ntypat", "znucl", "typat", "acell")
         keys = list(abivars.keys())
         check1, missings = self._all_in(mandatory, keys)
         tolerances = ("toldfe", "tolwfr", "toldff", "tolrff")
