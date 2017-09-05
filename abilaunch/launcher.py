@@ -107,7 +107,12 @@ class Launcher(AbiLauncher):
     def _process_jobfile(self, **kwargs):
         # Add MPI lines to jobfile if needed
         # use setter
-        for name, attr in {"jobname": kwargs.pop("jobname", None),
+        jobname = kwargs.pop("jobname", None)
+        if jobname is not None:
+            if len(jobname) > 16:
+                warnings.warn("jobname: %s is longer than 16 char."
+                              " It will be crop." % jobname)
+        for name, attr in {"jobname": jobname,
                            "nodes": kwargs.pop("nodes", None),
                            "ppn": kwargs.pop("ppn", None),
                            "runtime": kwargs.pop("runtime", None),
