@@ -52,15 +52,15 @@ class Launcher(AbiLauncher):
             raise ValueError("No abinit variables given...")
         self._approve_input(abinit_variables, **kwargs)
 
-        self.workdir = os.path.abspath(os.path.expanduser(workdir))
+        workdir = os.path.abspath(os.path.expanduser(workdir))
         # create calculation
         if input_name is not None:
             if input_name.endswith(".in"):
                 input_name = input_name[:-3]
         else:
             # input file name is the same as working directory
-            input_name = os.path.basename(self.workdir)
-        calcname = os.path.join(self.workdir, input_name)
+            input_name = os.path.basename(workdir)
+        calcname = os.path.join(workdir, input_name)
         super().__init__(calcname)
 
         # set executable if custom one is used
@@ -75,10 +75,10 @@ class Launcher(AbiLauncher):
 
         # set stderr to same directory of input file
         stderrname = os.path.basename(self.jobfile.stderr)
-        self.jobfile.set_stderr(os.path.join(self.workdir, stderrname))
+        self.jobfile.set_stderr(os.path.join(workdir, stderrname))
         # samething for logfile
         logname = os.path.basename(self.jobfile.log)
-        self.jobfile.set_log(os.path.join(self.workdir, logname))
+        self.jobfile.set_log(os.path.join(workdir, logname))
         # set input variables
         for varname, varvalue in abinit_variables.items():
             setattr(self, varname, varvalue)
@@ -86,7 +86,7 @@ class Launcher(AbiLauncher):
         # link input files
         self._process_to_link(to_link)
 
-        kwargs = self._process_jobfile(**kwargs)
+        kwargs = self._process_jobfile(workdir, **kwargs)
         if kwargs:
             raise ValueError("These variables were not used: %s" % str(kwargs))
         # write files
@@ -104,7 +104,7 @@ class Launcher(AbiLauncher):
             end = timer()
             print("Computation finished in %ss." % str(end - start))
 
-    def _process_jobfile(self, **kwargs):
+    def _process_jobfile(self, workdir, **kwargs):
         # Add MPI lines to jobfile if needed
         # use setter
         jobname = kwargs.pop("jobname", None)
@@ -112,9 +112,9 @@ class Launcher(AbiLauncher):
             if len(jobname) > 16:
                 warnings.warn("jobname: %s is longer than 16 char."
                               " It will be crop." % jobname)
-        if jobname is None:
+        if jobname is None and USER_CONFIG.qsub:
             # automaticaly choose workdir name
-            jobname = os.path.basename(self.workdir)
+            jobname = os.path.basename(workdir)
             if len(jobname) > 16:
                 jobname = jobname[:15]
             warnings.warn("No jobname given. Took %s as jobname." % jobname)
