@@ -52,15 +52,15 @@ class Launcher(AbiLauncher):
             raise ValueError("No abinit variables given...")
         self._approve_input(abinit_variables, **kwargs)
 
-        workdir = os.path.abspath(os.path.expanduser(workdir))
+        self.workdir = os.path.abspath(os.path.expanduser(workdir))
         # create calculation
         if input_name is not None:
             if input_name.endswith(".in"):
                 input_name = input_name[:-3]
         else:
             # input file name is the same as working directory
-            input_name = os.path.basename(workdir)
-        calcname = os.path.join(workdir, input_name)
+            input_name = os.path.basename(self.workdir)
+        calcname = os.path.join(self.workdir, input_name)
         super().__init__(calcname)
 
         # set executable if custom one is used
@@ -75,10 +75,10 @@ class Launcher(AbiLauncher):
 
         # set stderr to same directory of input file
         stderrname = os.path.basename(self.jobfile.stderr)
-        self.jobfile.set_stderr(os.path.join(workdir, stderrname))
+        self.jobfile.set_stderr(os.path.join(self.workdir, stderrname))
         # samething for logfile
         logname = os.path.basename(self.jobfile.log)
-        self.jobfile.set_log(os.path.join(workdir, logname))
+        self.jobfile.set_log(os.path.join(self.workdir, logname))
         # set input variables
         for varname, varvalue in abinit_variables.items():
             setattr(self, varname, varvalue)
@@ -112,6 +112,12 @@ class Launcher(AbiLauncher):
             if len(jobname) > 16:
                 warnings.warn("jobname: %s is longer than 16 char."
                               " It will be crop." % jobname)
+        if jobname is None:
+            # automaticaly choose workdir name
+            jobname = os.path.basename(self.workdir)
+            if len(jobname) > 16:
+                jobname = jobname[:15]
+            warnings.warn("No jobname given. Took %s as jobname." % jobname)
         for name, attr in {"jobname": jobname,
                            "nodes": kwargs.pop("nodes", None),
                            "ppn": kwargs.pop("ppn", None),
