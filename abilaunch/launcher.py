@@ -64,7 +64,7 @@ class Launcher(AbiLauncher):
         super().__init__(calcname)
 
         # set executable if custom one is used
-        if abinit_path is None:
+        if abinit_path is None or not len(str(abinit_path)):
             abinit_path = USER_CONFIG.abinit_path
         self.set_executable(abinit_path)
 
