@@ -32,9 +32,22 @@ class InputApprover:
             print(self.errors)
 
     def _check_validity(self, abinit_variables, paral_params):
+        nscf_ok = self._check_nscf_ok(abinit_variables)
         basics = self._check_basics(abinit_variables)
         paral = self._check_paral_params(abinit_variables, paral_params)
-        return basics and paral
+        return basics and paral and nscf_ok
+
+    def _check_nscf_ok(self, abinit_variables):
+        iscf = abinit_variables.get("iscf", 0)
+        if iscf < 0 and iscf != -3:
+            # iscf < 0 and iscf != -3 => nscf calculation
+            # check that tolwfr > 0
+            tolwfr = abinit_variables.get("tolwfr", 0.0)
+            if tolwfr <= 0.0:
+                self.errors.append("for iscf < 0 and != -3, tolwfr must be > 0.")
+                return False
+        return True
+
 
     def _check_paral_params(self, abinit_variables, paral_params):
         if paral_params is None:
