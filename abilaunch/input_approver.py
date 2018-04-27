@@ -56,6 +56,9 @@ class InputApprover:
         nodes = paral_params["nodes"]
         ppn = paral_params["ppn"]
         mpirun_np = paral_params["mpirun_np"]
+        if mpirun_np is None:
+            # No parallelization
+            return True
         if mpirun_np > ppn:
             self.errors.append("npernode (%i) call uses more proc than avail."
                                " on the nodes (%i)!" % (mpiuseppn, ppn))
