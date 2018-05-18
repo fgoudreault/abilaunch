@@ -1,4 +1,5 @@
-import warnings
+from .base import BaseUtility
+import logging
 
 
 # there is utilities in abipy to validate input files but the only thing they
@@ -6,25 +7,27 @@ import warnings
 # is more passive as it does not call abinit.
 
 
-class InputApprover:
+class InputApprover(BaseUtility):
     """Class that checks if a set of input variable is
      valid for an abinit calculation. The 'valid' attribute states
      if the input should be good. If it is False, abinit will raise an errored
      if it is launched with these variables.
     """
-    def __init__(self, abinit_variables, paral_params=None):
+    _loggername = "InputApprover"
+    def __init__(self, abinit_variables, paral_params=None, loglevel=logging.INFO):
         """
         Parameters
         ----------
         abinit_variables : dict of the abinit variables.
         """
+        super().__init__(loglevel=loglevel)
         if not isinstance(abinit_variables, dict):
             raise TypeError("The abinit variables should be a dictionary.")
 
         ndtset = abinit_variables.get("ndtset", 1)
         self.errors = []
         if ndtset > 1:
-            warnings.warn("Input approval is not implemented for multidtset.")
+            self._logger.warning("Input approval is not implemented for multidtset.")
             self.valid = True  # assume true
         else:
             self.valid = self._check_validity(abinit_variables, paral_params)

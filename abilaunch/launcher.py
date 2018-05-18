@@ -1,5 +1,6 @@
 from abipy.htc.launcher import Launcher as AbiLauncher
 from abipy.abio.abivars import AbinitInputFile
+from .base import BaseUtility
 from .config import ConfigFileParser
 from .input_approver import InputApprover
 from timeit import default_timer as timer
@@ -7,21 +8,22 @@ import os
 import shutil
 import tempfile
 import traceback
-import warnings
 
 
 USER_CONFIG = ConfigFileParser()
 
 
-class Launcher(AbiLauncher):
+class Launcher(BaseUtility):
     """Class that uses an abipy launcher to launch a simple calculation.
     """
+    _loggername = "Launcher"
     def __init__(self, workdir, pseudos, run=False,
                  input_name=None,
                  overwrite=False,
                  abinit_variables=None,
                  abinit_path=None,
                  to_link=None,
+                 loglevel=logging.INFO,
                  **kwargs):
         """Launcher class init method.
 
@@ -48,6 +50,7 @@ class Launcher(AbiLauncher):
                   A list of input files to link.
         kwargs : other attributes given to the jobfile.
         """
+        super().__init__(loglevel=loglevel)
         if abinit_variables is None:
             raise ValueError("No abinit variables given...")
         self._approve_input(abinit_variables, **kwargs)
@@ -61,27 +64,27 @@ class Launcher(AbiLauncher):
             # input file name is the same as working directory
             input_name = os.path.basename(workdir)
         calcname = os.path.join(workdir, input_name)
-        super().__init__(calcname)
+        self._abilauncher = AbiLauncher(calcname)
 
         # set executable if custom one is used
         if abinit_path is None or not len(str(abinit_path)):
             abinit_path = USER_CONFIG.abinit_path
-        self.set_executable(abinit_path)
+        self._abilauncher.set_executable(abinit_path)
 
         # set pseudos
         pseudo_dir, pseudos = self._check_pseudos(pseudos)
-        self.set_pseudodir(pseudo_dir)
-        self.set_pseudos(pseudos)
+        self._abilauncher.set_pseudodir(pseudo_dir)
+        self._abilauncher.set_pseudos(pseudos)
 
         # set stderr to same directory of input file
         stderrname = os.path.basename(self.jobfile.stderr)
-        self.jobfile.set_stderr(os.path.join(workdir, stderrname))
+        self._abilauncher.jobfile.set_stderr(os.path.join(workdir, stderrname))
         # samething for logfile
         logname = os.path.basename(self.jobfile.log)
-        self.jobfile.set_log(os.path.join(workdir, logname))
+        self._abilauncher.jobfile.set_log(os.path.join(workdir, logname))
         # set input variables
         for varname, varvalue in abinit_variables.items():
-            setattr(self, varname, varvalue)
+            setattr(self._abilauncher, varname, varvalue)
 
         # link input files
         self._process_to_link(to_link)
@@ -90,17 +93,17 @@ class Launcher(AbiLauncher):
         if kwargs:
             raise ValueError("These variables were not used: %s" % str(kwargs))
         # write files
-        self.make(verbose=1, force=overwrite)
+        self._abilauncher.make(verbose=1, force=overwrite)
         # run calculation
         if run:
             self.run()
 
     def run(self, submit=None):
         if (USER_CONFIG.qsub and submit is None) or submit:
-            self.submit(verbose=1)
+            self._abilauncher.submit(verbose=1)
         else:
             start = timer()
-            super().run(verbose=1)
+            self._abilauncher.run(verbose=1)
             end = timer()
             print("Computation finished in %ss." % str(end - start))
 
@@ -110,14 +113,14 @@ class Launcher(AbiLauncher):
         jobname = kwargs.pop("jobname", None)
         if jobname is not None:
             if len(jobname) > 16:
-                warnings.warn("jobname: %s is longer than 16 char."
-                              " It will be crop." % jobname)
+                self._logger.warning("jobname: %s is longer than 16 char."
+                                     " It will be crop." % jobname)
         if jobname is None and USER_CONFIG.qsub:
             # automaticaly choose workdir name
             jobname = os.path.basename(workdir)
             if len(jobname) > 16:
                 jobname = jobname[:15]
-            warnings.warn("No jobname given. Took %s as jobname." % jobname)
+            self._logger.warning("No jobname given. Took %s as jobname." % jobname)
         for name, attr in {"jobname": jobname,
                            "nodes": kwargs.pop("nodes", None),
                            "ppn": kwargs.pop("ppn", None),
@@ -148,7 +151,7 @@ class Launcher(AbiLauncher):
             if not os.path.exists(path):
                 raise FileNotFoundError("File to link not found: %s" %
                                         filename)
-            self.link_idat(path)
+            self._abilauncher.link_idat(path)
 
     def _check_pseudos(self, pseudos):
         pseudo_dir = set()
@@ -206,7 +209,7 @@ class Launcher(AbiLauncher):
             l = Launcher.from_files(newpath, *args, run=False, **kwargs)
         except Exception as e:  # pragma: nocover
             success = False
-            warnings.warn("An error occured. Full Traceback:")
+            self._logger.warning("An error occured. Full Traceback:")
             tb = traceback.format_exc()
             print(tb)
         else:

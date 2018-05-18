@@ -1,15 +1,18 @@
 from .launcher import Launcher
+from .base import BaseUtility
+import logging
 import numpy as np
 import os
 
 
-class MassLauncher:
+class MassLauncher(BaseUtility):
     def __init__(self,
                  workdir,
                  pseudos,
                  input_names,
                  base_variables,
                  specific_variables,
+                 loglevel=logging.INFO,
                  to_link=None, **kwargs):
         """Mass launcher input parameters.
 
@@ -34,6 +37,7 @@ class MassLauncher:
         Other kwargs (like run and overwrite) are passed directly to each
         sublauncher.
         """
+        super().__init__(loglevel)
         length = self._list_check(input_names, specific_variables)
         pseudos, to_link = self._sanitize_list_format(length, pseudos, to_link)
         kwargs = self._sanitize_dict_format(length, **kwargs)
@@ -43,10 +47,10 @@ class MassLauncher:
 
         self._launchers = self._launch(workdir, pseudos, input_names,
                                        base_variables,
-                                       specific_variables, to_link, **kwargs)
+                                       specific_variables, to_link, loglevel, **kwargs)
 
     def _launch(self, workdir, pseudos, input_names, base_variables,
-                specific_variables, to_link, **kwargs):
+                specific_variables, to_link, loglevel, **kwargs):
         launchers = []
         for i, (input_name, pseudo,
                 specifics, to_link_here) in enumerate(zip(input_names,
@@ -63,6 +67,7 @@ class MassLauncher:
                          input_name=input_name,
                          abinit_variables=abinit_vars,
                          to_link=to_link_here,
+                         loglevel=loglevel,
                          **kwargs_here)
             launchers.append(l)
         return launchers
