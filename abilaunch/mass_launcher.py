@@ -6,13 +6,17 @@ import os
 
 
 class MassLauncher(BaseUtility):
+    _loggername = "MassLauncher"
+
     def __init__(self,
                  workdir,
-                 pseudos,
+                 common_pseudos,
                  input_names,
                  base_variables,
                  specific_variables,
+                 specific_pseudos=None,
                  loglevel=logging.INFO,
+                 jobnames=None,
                  to_link=None, **kwargs):
         """Mass launcher input parameters.
 
@@ -20,9 +24,9 @@ class MassLauncher(BaseUtility):
         ----------
         workdir : str
                   Working directory where all launchers will be launched.
-        pseudos : list
-                  List or list of list (one list for each calculation) of the
-                  pseudos used in the calculations.
+        common_pseudos : list
+                         List of the common pseudos for each calculation.
+                         Can be a single string.
         input_names : list
                       The list of the names of the calculations. They will
                       be used to name the subdirectory.
@@ -32,42 +36,59 @@ class MassLauncher(BaseUtility):
         specific_variables : list
                              The list of dictionary of the specific variables
                              for each calculations.
+        specific_pseudos : list, optional
+                           A list of pseudos specifc for each calculation.
         to_link : str, list, optional
                   A file or a list of file to link to each calculation.
+        loglevel : int, optional
+                   Sets the logging level.
+        jobnames : list, optional
+                   The list of jobnames for each job.
         Other kwargs (like run and overwrite) are passed directly to each
         sublauncher.
         """
         super().__init__(loglevel)
         length = self._list_check(input_names, specific_variables)
-        pseudos, to_link = self._sanitize_list_format(length, pseudos, to_link)
+        self._logger.debug(f"{length} different calculations to launch.")
+        (common_pseudos,
+         to_link,
+         jobnames) = self._sanitize_list_format(length, common_pseudos,
+                                                to_link, jobnames)
         kwargs = self._sanitize_dict_format(length, **kwargs)
         workdir = os.path.abspath(workdir)
         if not os.path.exists(workdir):
             os.mkdir(workdir)
+        if specific_pseudos is None:
+            specific_pseudos = [[], ] * length
+        self._launchers = self._launch(workdir, common_pseudos,
+                                       specific_pseudos,
+                                       input_names, base_variables,
+                                       specific_variables, to_link, loglevel,
+                                       jobnames,
+                                       **kwargs)
 
-        self._launchers = self._launch(workdir, pseudos, input_names,
-                                       base_variables,
-                                       specific_variables, to_link, loglevel, **kwargs)
-
-    def _launch(self, workdir, pseudos, input_names, base_variables,
-                specific_variables, to_link, loglevel, **kwargs):
+    def _launch(self, workdir, common_pseudos, specific_pseudos,
+                input_names, base_variables,
+                specific_variables, to_link, loglevel, jobnames, **kwargs):
+        self._logger.debug("Starting to create all launchers.")
         launchers = []
-        for i, (input_name, pseudo,
-                specifics, to_link_here) in enumerate(zip(input_names,
-                                                          pseudos,
-                                                          specific_variables,
-                                                          to_link)):
+        for i, (input_name,
+                specifics, to_link_here,
+                jobname) in enumerate(zip(input_names,
+                                          specific_variables,
+                                          to_link, jobnames)):
             if input_name.endswith(".in"):
                 input_name = input_name[:-3]
             path = os.path.join(workdir, input_name)
             abinit_vars = base_variables.copy()
             abinit_vars.update(specifics)
             kwargs_here = {k: v[i] for k, v in kwargs.items()}
-            l = Launcher(path, pseudo,
+            l = Launcher(path, common_pseudos + specific_pseudos[i],
                          input_name=input_name,
                          abinit_variables=abinit_vars,
                          to_link=to_link_here,
                          loglevel=loglevel,
+                         jobname=jobname,
                          **kwargs_here)
             launchers.append(l)
         return launchers
@@ -87,9 +108,9 @@ class MassLauncher(BaseUtility):
         toreturn = []
         for arg in args:
             if not self._is_list(arg):
+                # single string
                 toreturn.append([arg] * length)
                 continue
-            # here, it should be a list type and so it is ok
             toreturn.append(arg)
         return toreturn
 
