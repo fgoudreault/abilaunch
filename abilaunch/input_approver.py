@@ -14,7 +14,9 @@ class InputApprover(BaseUtility):
      if it is launched with these variables.
     """
     _loggername = "InputApprover"
-    def __init__(self, abinit_variables, paral_params=None, loglevel=logging.INFO):
+
+    def __init__(self, abinit_variables, paral_params=None,
+                 loglevel=logging.INFO):
         """
         Parameters
         ----------
@@ -27,7 +29,8 @@ class InputApprover(BaseUtility):
         ndtset = abinit_variables.get("ndtset", 1)
         self.errors = []
         if ndtset > 1:
-            self._logger.warning("Input approval is not implemented for multidtset.")
+            self._logger.warning("Input approval is not implemented"
+                                 " for multidtset.")
             self.valid = True  # assume true
         else:
             self.valid = self._check_validity(abinit_variables, paral_params)
@@ -47,10 +50,10 @@ class InputApprover(BaseUtility):
             # check that tolwfr > 0
             tolwfr = abinit_variables.get("tolwfr", 0.0)
             if tolwfr <= 0.0:
-                self.errors.append("for iscf < 0 and != -3, tolwfr must be > 0.")
+                self.errors.append("for iscf < 0 and != -3, tolwfr"
+                                   "  must be > 0.")
                 return False
         return True
-
 
     def _check_paral_params(self, abinit_variables, paral_params):
         if paral_params is None:
@@ -63,8 +66,9 @@ class InputApprover(BaseUtility):
             # No parallelization
             return True
         if mpirun_np > ppn:
-            self.errors.append("npernode (%i) call uses more proc than avail."
-                               " on the nodes (%i)!" % (mpiuseppn, ppn))
+            self.errors.append(f"npernode {mpirun_np} call uses"
+                               f" more proc than available"
+                               f" on the nodes ({ppn})!")
             return False
         if isinstance(nodes, str):
             if ":" in nodes:

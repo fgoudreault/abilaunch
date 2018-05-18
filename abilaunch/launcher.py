@@ -4,6 +4,7 @@ from .base import BaseUtility
 from .config import ConfigFileParser
 from .input_approver import InputApprover
 from timeit import default_timer as timer
+import logging
 import os
 import shutil
 import tempfile
@@ -17,6 +18,7 @@ class Launcher(BaseUtility):
     """Class that uses an abipy launcher to launch a simple calculation.
     """
     _loggername = "Launcher"
+
     def __init__(self, workdir, pseudos, run=False,
                  input_name=None,
                  overwrite=False,
@@ -77,10 +79,10 @@ class Launcher(BaseUtility):
         self._abilauncher.set_pseudos(pseudos)
 
         # set stderr to same directory of input file
-        stderrname = os.path.basename(self.jobfile.stderr)
+        stderrname = os.path.basename(self._abilauncher.jobfile.stderr)
         self._abilauncher.jobfile.set_stderr(os.path.join(workdir, stderrname))
         # samething for logfile
-        logname = os.path.basename(self.jobfile.log)
+        logname = os.path.basename(self._abilauncher.jobfile.log)
         self._abilauncher.jobfile.set_log(os.path.join(workdir, logname))
         # set input variables
         for varname, varvalue in abinit_variables.items():
@@ -120,7 +122,7 @@ class Launcher(BaseUtility):
             jobname = os.path.basename(workdir)
             if len(jobname) > 16:
                 jobname = jobname[:15]
-            self._logger.warning("No jobname given. Took %s as jobname." % jobname)
+            self._logger.warning(f"No jobname given. Took %s as {jobname}.")
         for name, attr in {"jobname": jobname,
                            "nodes": kwargs.pop("nodes", None),
                            "ppn": kwargs.pop("ppn", None),
@@ -128,7 +130,7 @@ class Launcher(BaseUtility):
                            "memory": kwargs.pop("memory", None),
                            }.items():
             if attr is not None:
-                func = "self.set_" + name
+                func = "self._abilauncher.set_" + name
                 eval(func)(attr)
         # use attribute setting directly
         for name, lines in {"lines_before": kwargs.pop("lines_before", None),
@@ -137,7 +139,7 @@ class Launcher(BaseUtility):
                             "modules": kwargs.pop("modules", None),
                             "mpirun": kwargs.pop("mpirun", None)}.items():
             if lines is not None:
-                setattr(self.jobfile, name, lines)
+                setattr(self._abilauncher.jobfile, name, lines)
         # return rest of kwargs
         return kwargs
 
@@ -209,7 +211,7 @@ class Launcher(BaseUtility):
             l = Launcher.from_files(newpath, *args, run=False, **kwargs)
         except Exception as e:  # pragma: nocover
             success = False
-            self._logger.warning("An error occured. Full Traceback:")
+            print("An error occured. Full Traceback:")
             tb = traceback.format_exc()
             print(tb)
         else:
