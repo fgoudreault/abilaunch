@@ -7,9 +7,19 @@ creates an easy interface with abipy.
 Installation
 ------------
 
+Download repository using git::
+
+  $ git clone git@github.com:fgoudreault/abilaunch.git
+  $ cd abilaunch
+
 Execute setup script::
 
-  $ python setup.py develop
+  $ pip install .
+
+For a development installation (to modify the code without having to execute
+the setup script each time). Use the `-e` flag for the `pip install` command::
+
+  $ pip install -e .
 
 Tests
 -----
